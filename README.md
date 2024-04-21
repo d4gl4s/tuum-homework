@@ -6,6 +6,7 @@
 - [Important Choices](#important-choices-in-my-solution)
 - [Estimating Transactions per Second](#estimating-transactions-per-second)
 - [Scaling Applications Horizontally](#scaling-applications-horizontally)
+- [No Tests? Summary](#summary-no-tests-)
 
 ## How to build and run application?
 
@@ -49,12 +50,28 @@ Here are some of the choices I made on my own command:
 6. **Dockerization:** I would have hoped to include the build process of the springboot application in the Dockerfile, but time was running short and I decided that building the .jar file manually before running containers, is good enough.
 7. **Global Exception Handling:** I implemented global exception handling with custom exceptions that match our domain. This makes our endpoints more concise and easier to implement, since we do not have to catch the same exceptions in different endpoints and return appropriate responses. These custom exceptions are thrown in the service classes with meaningful messages, wherever necessary.
 8. I split the business logic into two services, because that seemed more reasonable. Additionally, I made sure to only call corresponding mappers methods from services (for example avoided calling accountMapper methods from transactionService)
+9. **No Tests:** Since I had an exam on friday, and other schoolwork on saturday, I only had one sunday to complete this assignment. I knew I was not going to finish it, but I decided to give it a shot. I decided that if I ran out of time, I would not implement the tests, since that would be of the least value towards assessing a candidates skills (not sure if that is true or not). I worked on this homework for about 12 hours, running into issues with docker images in the meantime. 
 
 <br>
 
 ## Estimating Transactions per Second
 
 I will try to estimate how many transactions can my application handle on per second on my local development machine.
+
+Since I did not have time to implement tests, I can not run performance test on the application. I will try to estimate the throughput using the request times as guides.
+
+On average each different type of request took (calculated over 10 requests):
+
+* CREATE account: 12 ms
+* CREATE transaction: 9 ms
+* GET account: 3 ms
+* GET transaction: 3 ms
+
+Based on those numbers, an average request takes **6.75 ms**
+
+Lets say that ` TPS = 1 second / average request time`
+
+In that case our estimated transactions per second (TPS) would be `1000 ms / 6.75 ms = 153 requests`
 
 <br>
 
@@ -65,3 +82,9 @@ To scale the application horizontally, I would consider the following:
 * **Load balancing:** Distributing incoming requests across multiple instances of the application. 
 * **Database sharding:** Partitioning data across multiple database instances to distribute the load. 
 * **Message Queues:** Using RabbitMQ allows for decoupling of components, making it easier to scale independently.
+
+<br>
+
+## Summary. No tests 🙁?
+
+Since I had an exam on Friday, and other schoolwork on Saturday, I only had one Sunday to complete this assignment. I knew I was not going to finish it, but I decided to give it a shot. I decided that if I ran out of time, I would not implement the tests, since that would be of the least value towards assessing a candidates skills (not sure if that is true or not, just a thought). I worked on this homework for about 12 hours, running into issues with docker images in the meantime. 

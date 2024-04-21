@@ -90,7 +90,7 @@ public class AccountService {
 
     public boolean isAccountInvalid(Long accountId) {
         AccountDatabaseDTO account = accountMapper.getAccountById(accountId).orElse(null);
-        return account != null;
+        return account == null;
     }
 
     public void updateAccountBalance(Long accountId, Balance newBalance) throws ResourceNotFoundException {
