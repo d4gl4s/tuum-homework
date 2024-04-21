@@ -3,6 +3,7 @@ package com.tuum.tuumhomework.controller;
 import com.tuum.tuumhomework.DTO.CreateAccountRequest;
 import com.tuum.tuumhomework.DTO.CreateAccountResponse;
 import com.tuum.tuumhomework.DTO.GetAccountResponse;
+import com.tuum.tuumhomework.exceptions.InvalidInputException;
 import com.tuum.tuumhomework.exceptions.ResourceNotFoundException;
 import com.tuum.tuumhomework.service.AccountService;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +16,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AccountController {
 
-    private AccountService accountService;
+    private final AccountService accountService;
 
     @PostMapping("/create")
-    public ResponseEntity<CreateAccountResponse> createAccount(@RequestBody CreateAccountRequest request) {
+    public ResponseEntity<CreateAccountResponse> createAccount(@RequestBody CreateAccountRequest request) throws InvalidInputException {
         CreateAccountResponse response = accountService.createAccount(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

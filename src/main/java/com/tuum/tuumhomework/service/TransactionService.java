@@ -22,8 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransactionService {
 
-    private TransactionMapper transactionMapper;
-    private AccountMapper accountMapper;
+    private final TransactionMapper transactionMapper;
+    private final AccountMapper accountMapper;
 
     @Transactional
     public CreateTransactionResponse createTransaction(CreateTransactionRequest request) throws InvalidInputException, ResourceNotFoundException, InsufficientFundsException{
@@ -67,7 +67,7 @@ public class TransactionService {
                 .description(request.getDescription())
                 .build();
 
-        // Insert transaction
+        // Insert transaction, generates ID as well
         transactionMapper.insertTransaction(transaction);
 
         // Change account balance

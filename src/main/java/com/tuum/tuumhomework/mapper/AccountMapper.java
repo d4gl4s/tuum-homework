@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface AccountMapper {
 
     @Insert("INSERT INTO account (customer_id) VALUES (#{account.customerId})")
+    @SelectKey(statement="SELECT currval('account_id_seq') AS id", keyProperty="account.id", before=false, resultType=Long.class)
     void insertAccount(@Param("account") Account account);
 
     @Select("SELECT * FROM account WHERE id = #{id}")

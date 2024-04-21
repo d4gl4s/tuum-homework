@@ -5,6 +5,7 @@ import com.tuum.tuumhomework.DTO.CreateAccountRequest;
 import com.tuum.tuumhomework.DTO.CreateAccountResponse;
 import com.tuum.tuumhomework.DTO.GetAccountResponse;
 import com.tuum.tuumhomework.enums.Currency;
+import com.tuum.tuumhomework.exceptions.InvalidInputException;
 import com.tuum.tuumhomework.exceptions.ResourceNotFoundException;
 import com.tuum.tuumhomework.mapper.AccountMapper;
 import com.tuum.tuumhomework.model.Account;
@@ -21,12 +22,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccountService {
 
-    private AccountMapper accountMapper;
+    private final AccountMapper accountMapper;
 
     @Transactional
-    public CreateAccountResponse createAccount(CreateAccountRequest request) {
+    public CreateAccountResponse createAccount(CreateAccountRequest request) throws InvalidInputException {
 
         // Creates initial balances for the account in given currencies
+        if(request.getCurrencies() == null || request.getCurrencies().isEmpty())
+            throw new InvalidInputException("Please provide currencies with account");
+
         List<Balance> balances = new ArrayList<>();
         for (Currency currency : request.getCurrencies()) {
             // No need to check if currency is valid, since that is done in the string to currency converter
@@ -41,7 +45,7 @@ public class AccountService {
                 .customerId(request.getCustomerId())
                 .build();
 
-        // Insert account
+        // Insert account, generates ID value as well
         accountMapper.insertAccount(account);
 
         // Return response
