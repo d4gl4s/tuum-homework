@@ -5,6 +5,8 @@ import com.tuum.tuumhomework.DTO.CreateAccountRequest;
 import com.tuum.tuumhomework.DTO.CreateAccountResponse;
 import com.tuum.tuumhomework.DTO.GetAccountResponse;
 import com.tuum.tuumhomework.enums.Currency;
+import com.tuum.tuumhomework.enums.ExchangeName;
+import com.tuum.tuumhomework.enums.RoutingKey;
 import com.tuum.tuumhomework.exceptions.InvalidInputException;
 import com.tuum.tuumhomework.exceptions.ResourceNotFoundException;
 import com.tuum.tuumhomework.mapper.AccountMapper;
@@ -50,7 +52,10 @@ public class AccountService {
        insertAccountWithBalances(account);
 
         // Publish message to RabbitMQ
-        rabbitTemplate.convertAndSend("account-exchange", "account.created", "Account created with id: " + account.getId());
+        rabbitTemplate.convertAndSend(
+                ExchangeName.ACCOUNT.getName(),
+                RoutingKey.ACCOUNT_CREATED.getKey(),
+                "Account created with id: " + account.getId());
 
         // Return response
         return CreateAccountResponse.builder()
@@ -96,7 +101,10 @@ public class AccountService {
         accountMapper.updateAccountBalance(accountId, newBalance);
 
         // Publish message to RabbitMQ
-        rabbitTemplate.convertAndSend("account-exchange", "account.updated", "account id: " + accountId + ", new balance: " + newBalance.getAvailableAmount());
+        rabbitTemplate.convertAndSend(
+                ExchangeName.ACCOUNT.getName(),
+                RoutingKey.ACCOUNT_UPDATED.getKey(),
+                "account id: " + accountId + ", new balance: " + newBalance.getAvailableAmount());
     }
 }
 

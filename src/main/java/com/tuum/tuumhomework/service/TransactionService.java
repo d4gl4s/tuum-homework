@@ -3,6 +3,8 @@ package com.tuum.tuumhomework.service;
 import com.tuum.tuumhomework.DTO.CreateTransactionRequest;
 import com.tuum.tuumhomework.DTO.CreateTransactionResponse;
 import com.tuum.tuumhomework.DTO.GetAccountResponse;
+import com.tuum.tuumhomework.enums.ExchangeName;
+import com.tuum.tuumhomework.enums.RoutingKey;
 import com.tuum.tuumhomework.enums.TransactionDirection;
 import com.tuum.tuumhomework.exceptions.InsufficientFundsException;
 import com.tuum.tuumhomework.exceptions.InvalidInputException;
@@ -72,9 +74,11 @@ public class TransactionService {
         relevantBalance.setAvailableAmount(newBalance);
         accountService.updateAccountBalance(account.getAccountId(), relevantBalance);
 
-
         // Publish message to RabbitMQ
-        rabbitTemplate.convertAndSend("transaction-exchange", "transaction.created", "Transaction created with id: " + transaction.getId());
+        rabbitTemplate.convertAndSend(
+                ExchangeName.TRANSACTION.getName(),
+                RoutingKey.TRANSACTION_CREATED.getKey(),
+                "Transaction created with id: " + transaction.getId());
 
         // Here we could use a mapper to simplify the code here
         return CreateTransactionResponse.builder()
