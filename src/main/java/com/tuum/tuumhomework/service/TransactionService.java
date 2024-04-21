@@ -1,6 +1,5 @@
 package com.tuum.tuumhomework.service;
 
-import com.tuum.tuumhomework.DTO.AccountDatabaseDTO;
 import com.tuum.tuumhomework.DTO.CreateTransactionRequest;
 import com.tuum.tuumhomework.DTO.CreateTransactionResponse;
 import com.tuum.tuumhomework.DTO.GetAccountResponse;
@@ -8,12 +7,11 @@ import com.tuum.tuumhomework.enums.TransactionDirection;
 import com.tuum.tuumhomework.exceptions.InsufficientFundsException;
 import com.tuum.tuumhomework.exceptions.InvalidInputException;
 import com.tuum.tuumhomework.exceptions.ResourceNotFoundException;
-import com.tuum.tuumhomework.mapper.AccountMapper;
 import com.tuum.tuumhomework.mapper.TransactionMapper;
-import com.tuum.tuumhomework.model.Account;
 import com.tuum.tuumhomework.model.Balance;
 import com.tuum.tuumhomework.model.Transaction;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +23,8 @@ import java.util.List;
 public class TransactionService {
 
     private final TransactionMapper transactionMapper;
-    private final AccountMapper accountMapper;
     private final AccountService accountService;
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional
     public CreateTransactionResponse createTransaction(CreateTransactionRequest request) throws InvalidInputException, ResourceNotFoundException, InsufficientFundsException{
@@ -72,7 +70,11 @@ public class TransactionService {
 
         // Change account balance
         relevantBalance.setAvailableAmount(newBalance);
-        accountMapper.updateAccountBalance(account.getAccountId(), relevantBalance);
+        accountService.updateAccountBalance(account.getAccountId(), relevantBalance);
+
+
+        // Publish message to RabbitMQ
+        rabbitTemplate.convertAndSend("transaction-exchange", "transaction.created", "Transaction created with id: " + transaction.getId());
 
         // Here we could use a mapper to simplify the code here
         return CreateTransactionResponse.builder()
@@ -94,9 +96,7 @@ public class TransactionService {
 
     public List<Transaction> getTransactions(Long accountId) throws ResourceNotFoundException{
         // Check if account is valid
-       // accountMapper.getAccountById(accountId)
-         //       .orElseThrow(() -> new ResourceNotFoundException("Account not found with given id: " + accountId));
-
+        if(accountService.isAccountInvalid(accountId)) throw new ResourceNotFoundException("Account not found with given id: " + accountId);
         return transactionMapper.getTransactionsByAccountId(accountId);
     }
 }

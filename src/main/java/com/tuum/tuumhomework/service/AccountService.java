@@ -1,6 +1,5 @@
 package com.tuum.tuumhomework.service;
 
-
 import com.tuum.tuumhomework.DTO.AccountDatabaseDTO;
 import com.tuum.tuumhomework.DTO.CreateAccountRequest;
 import com.tuum.tuumhomework.DTO.CreateAccountResponse;
@@ -12,6 +11,7 @@ import com.tuum.tuumhomework.mapper.AccountMapper;
 import com.tuum.tuumhomework.model.Account;
 import com.tuum.tuumhomework.model.Balance;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +24,7 @@ import java.util.List;
 public class AccountService {
 
     private final AccountMapper accountMapper;
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional
     public CreateAccountResponse createAccount(CreateAccountRequest request) throws InvalidInputException {
@@ -39,8 +40,6 @@ public class AccountService {
             balances.add(balance);
         }
 
-        System.out.println(request.getCountry());
-
         // Create account
         Account account =  Account.builder()
                 .country(request.getCountry())
@@ -49,7 +48,9 @@ public class AccountService {
                 .build();
 
        insertAccountWithBalances(account);
-        System.out.println("inserted");
+
+        // Publish message to RabbitMQ
+        rabbitTemplate.convertAndSend("account-exchange", "account.created", "Account created with id: " + account.getId());
 
         // Return response
         return CreateAccountResponse.builder()
@@ -80,6 +81,22 @@ public class AccountService {
                 .customerId(account.getCustomerId())
                 .balances(balances)
                 .build();
+    }
+
+    public boolean isAccountInvalid(Long accountId) {
+        AccountDatabaseDTO account = accountMapper.getAccountById(accountId).orElse(null);
+        return account != null;
+    }
+
+    public void updateAccountBalance(Long accountId, Balance newBalance) throws ResourceNotFoundException {
+        // Make sure account exists
+        if(isAccountInvalid(accountId)) throw new ResourceNotFoundException("Account not found with given id: " + accountId);
+
+        // Update balance
+        accountMapper.updateAccountBalance(accountId, newBalance);
+
+        // Publish message to RabbitMQ
+        rabbitTemplate.convertAndSend("account-exchange", "account.updated", "account id: " + accountId + ", new balance: " + newBalance.getAvailableAmount());
     }
 }
 
