@@ -79,9 +79,20 @@ In that case our estimated transactions per second (TPS) would be `1000 ms / 6.7
 
 To scale the application horizontally, I would consider the following:
 
+* **Microservices:** Splitting the application into microservices means that these services can scale independently. This helps us save resources.
 * **Load balancing:** Distributing incoming requests across multiple instances of the application. 
 * **Database sharding:** Partitioning data across multiple database instances to distribute the load. 
 * **Message Queues:** Using RabbitMQ allows for decoupling of components, making it easier to scale independently.
+* **Caching:** Implementing caching to reduce server load.
+
+Other thing to keep in mind:
+
+* **Complexity:** Distributed systems are more difficult to deploy, monitor and troubleshoot.
+* **Cost:** Scaling typically leads to increased infrastructure costs. So its important to only scale if really needed.
+* **State Management:** If I would like to have shared state between my instances, that is now more difficult.
+
+I guess scaling really depends on the situation. Applications should scale only if needed and not too soon.
+
 
 <br>
 
