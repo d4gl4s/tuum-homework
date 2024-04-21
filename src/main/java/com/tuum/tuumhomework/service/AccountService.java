@@ -1,6 +1,7 @@
 package com.tuum.tuumhomework.service;
 
 
+import com.tuum.tuumhomework.DTO.AccountDatabaseDTO;
 import com.tuum.tuumhomework.DTO.CreateAccountRequest;
 import com.tuum.tuumhomework.DTO.CreateAccountResponse;
 import com.tuum.tuumhomework.DTO.GetAccountResponse;
@@ -38,6 +39,8 @@ public class AccountService {
             balances.add(balance);
         }
 
+        System.out.println(request.getCountry());
+
         // Create account
         Account account =  Account.builder()
                 .country(request.getCountry())
@@ -45,8 +48,8 @@ public class AccountService {
                 .customerId(request.getCustomerId())
                 .build();
 
-        // Insert account, generates ID value as well
-        accountMapper.insertAccount(account);
+       insertAccountWithBalances(account);
+        System.out.println("inserted");
 
         // Return response
         return CreateAccountResponse.builder()
@@ -56,16 +59,26 @@ public class AccountService {
                 .build();
     }
 
+    private void insertAccountWithBalances( Account account) {
+        // Insert account
+        accountMapper.insertAccount(account);
+
+        // Insert balances
+        for (Balance balance : account.getBalances()) {
+            accountMapper.insertBalance(account.getId(), balance);
+        }
+    }
+
     public GetAccountResponse getAccount(Long accountId) throws ResourceNotFoundException {
-        // Get account
-        Account account = accountMapper.getAccountById(accountId)
+        AccountDatabaseDTO account = accountMapper.getAccountById(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found with given id: " + accountId));
+        List<Balance> balances = accountMapper.getBalancesByAccountId(accountId);
 
         // Return response
         return GetAccountResponse.builder()
                 .accountId(accountId)
                 .customerId(account.getCustomerId())
-                .balances(account.getBalances())
+                .balances(balances)
                 .build();
     }
 }

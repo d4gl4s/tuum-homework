@@ -1,7 +1,9 @@
 package com.tuum.tuumhomework.service;
 
+import com.tuum.tuumhomework.DTO.AccountDatabaseDTO;
 import com.tuum.tuumhomework.DTO.CreateTransactionRequest;
 import com.tuum.tuumhomework.DTO.CreateTransactionResponse;
+import com.tuum.tuumhomework.DTO.GetAccountResponse;
 import com.tuum.tuumhomework.enums.TransactionDirection;
 import com.tuum.tuumhomework.exceptions.InsufficientFundsException;
 import com.tuum.tuumhomework.exceptions.InvalidInputException;
@@ -24,6 +26,7 @@ public class TransactionService {
 
     private final TransactionMapper transactionMapper;
     private final AccountMapper accountMapper;
+    private final AccountService accountService;
 
     @Transactional
     public CreateTransactionResponse createTransaction(CreateTransactionRequest request) throws InvalidInputException, ResourceNotFoundException, InsufficientFundsException{
@@ -32,9 +35,7 @@ public class TransactionService {
         if(request.getAmount().compareTo(BigDecimal.ZERO) <= 0)
             throw new InvalidInputException("Invalid transaction amount. Amount can not be negative or zero");
 
-        // Check if account is valid
-        Account account = accountMapper.getAccountById(request.getAccountId())
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found with given id: " + request.getAccountId()));
+        GetAccountResponse account = accountService.getAccount(request.getAccountId());
 
         // Check if account has sufficient funds
         Balance accountBalance = null;
@@ -72,7 +73,7 @@ public class TransactionService {
 
         // Change account balance
         accountBalance.setAvailableAmount(newBalance);
-        accountMapper.updateAccountBalance(account.getId(), accountBalance);
+        accountMapper.updateAccountBalance(account.getAccountId(), accountBalance);
 
         // Here we could use a mapper to simplify the code here
         return CreateTransactionResponse.builder()
@@ -94,8 +95,8 @@ public class TransactionService {
 
     public List<Transaction> getTransactions(Long accountId) throws ResourceNotFoundException{
         // Check if account is valid
-        accountMapper.getAccountById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found with given id: " + accountId));
+       // accountMapper.getAccountById(accountId)
+         //       .orElseThrow(() -> new ResourceNotFoundException("Account not found with given id: " + accountId));
 
         return transactionMapper.getTransactionsByAccountId(accountId);
     }

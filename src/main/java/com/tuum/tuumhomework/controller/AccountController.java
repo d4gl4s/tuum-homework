@@ -26,6 +26,7 @@ public class AccountController {
 
     @GetMapping("/{accountId}")
     public ResponseEntity<GetAccountResponse> getAccount(@PathVariable Long accountId) throws ResourceNotFoundException {
+        System.out.println("New request");
         GetAccountResponse response = accountService.getAccount(accountId);
         return ResponseEntity.ok(response);
     }
