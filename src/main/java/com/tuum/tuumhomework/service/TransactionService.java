@@ -37,28 +37,27 @@ public class TransactionService {
 
         GetAccountResponse account = accountService.getAccount(request.getAccountId());
 
-        // Check if account has sufficient funds
-        Balance accountBalance = null;
-
-        outer:
-        if (TransactionDirection.OUT.equals(request.getDirection())) {
-            for (Balance balance : account.getBalances()) {
-                if (balance.getCurrency().equals(request.getCurrency())){
-                    accountBalance = balance;
-                    if (balance.getAvailableAmount().compareTo(request.getAmount()) >= 0)
-                        break outer;
-                    else throw new InsufficientFundsException("Insufficient funds. Not enough balance for transaction.");
-                }
+        // find the relevant balance
+        Balance relevantBalance = null;
+        for (Balance accountBalance : account.getBalances()) {
+            if(accountBalance.getCurrency().equals(request.getCurrency())){
+                relevantBalance = accountBalance;
+                break;
             }
-            throw new InvalidInputException("Invalid currency. Account does not have balance with such currency.");
+        }
+        if (relevantBalance == null) throw new InvalidInputException("Invalid currency. Account does not have balance with such currency.");
+
+        // Check if account has sufficient funds
+        if (TransactionDirection.OUT.equals(request.getDirection())) {
+            if (relevantBalance.getAvailableAmount().compareTo(request.getAmount()) < 0)
+                throw new InsufficientFundsException("Insufficient funds. Not enough balance for transaction.");
         }
 
         // Check if description is missing
         if (request.getDescription().isBlank())
             throw new InvalidInputException("Transaction description missing");
 
-        BigDecimal newBalance = calculateNewBalance(request.getDirection(),
-                request.getAmount(), accountBalance);
+        BigDecimal newBalance = calculateNewBalance(request, relevantBalance);
 
         Transaction transaction = Transaction.builder()
                 .accountId(request.getAccountId())
@@ -72,8 +71,8 @@ public class TransactionService {
         transactionMapper.insertTransaction(transaction);
 
         // Change account balance
-        accountBalance.setAvailableAmount(newBalance);
-        accountMapper.updateAccountBalance(account.getAccountId(), accountBalance);
+        relevantBalance.setAvailableAmount(newBalance);
+        accountMapper.updateAccountBalance(account.getAccountId(), relevantBalance);
 
         // Here we could use a mapper to simplify the code here
         return CreateTransactionResponse.builder()
@@ -87,10 +86,10 @@ public class TransactionService {
                 .build();
     }
 
-    private BigDecimal calculateNewBalance(TransactionDirection direction, BigDecimal amount, Balance accountBalance){
-        if(direction.equals(TransactionDirection.OUT))
-            return accountBalance.getAvailableAmount().subtract(amount);
-        return accountBalance.getAvailableAmount().add(amount);
+    private BigDecimal calculateNewBalance(CreateTransactionRequest request, Balance relevantBalance) throws InvalidInputException{
+        if(request.getDirection().equals(TransactionDirection.OUT))
+            return relevantBalance.getAvailableAmount().subtract(request.getAmount());
+        return relevantBalance.getAvailableAmount().add(request.getAmount());
     }
 
     public List<Transaction> getTransactions(Long accountId) throws ResourceNotFoundException{

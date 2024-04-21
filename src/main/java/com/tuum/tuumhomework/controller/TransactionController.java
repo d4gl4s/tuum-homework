@@ -19,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransactionController {
 
-    private TransactionService transactionService;
+    private final TransactionService transactionService;
 
     @PostMapping("/create")
     public ResponseEntity<CreateTransactionResponse> createTransaction(@RequestBody CreateTransactionRequest request)
@@ -30,7 +30,7 @@ public class TransactionController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{accountId}")
+    @GetMapping("/account/{accountId}")
     public ResponseEntity<List<Transaction>> getAccount(@PathVariable Long accountId) throws ResourceNotFoundException {
         List<Transaction> response = transactionService.getTransactions(accountId);
         return ResponseEntity.ok(response);

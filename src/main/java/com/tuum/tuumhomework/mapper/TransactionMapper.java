@@ -8,9 +8,9 @@ import java.util.List;
 @Mapper
 public interface TransactionMapper {
 
-    @Insert("INSERT INTO transaction (account_id, amount, currency, direction, description, balance_after_transaction) " +
+    @Insert("INSERT INTO transaction (account_id, amount, currency, direction, description) " +
             "VALUES (#{transaction.accountId}, #{transaction.amount}, #{transaction.currency}, #{transaction.direction}, " +
-            "#{transaction.description}, #{transaction.balanceAfterTransaction})")
+            "#{transaction.description})")
     @SelectKey(statement="SELECT currval('transaction_id_seq') AS id", keyProperty="transaction.id", before=false, resultType=Long.class)
     void insertTransaction(@Param("transaction") Transaction transaction);
 
