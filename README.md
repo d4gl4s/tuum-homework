@@ -18,3 +18,9 @@ To build and run my application follow the steps below:
 I will try to estimate how many transactions can my application handle on per second on my local development machine.
 
 ## Scaling Applications Horizontally
+
+To scale the application horizontally, we can consider the following:
+
+* **Load balancing:** Distributing incoming requests across multiple instances of the application. 
+* **Database sharding:** Partitioning data across multiple database instances to distribute the load. 
+* **Message Queues:** Using RabbitMQ allows for decoupling of components, making it easier to scale independently.
